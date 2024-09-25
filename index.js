@@ -118,42 +118,33 @@ async function connectToWhatsApp() {
         if (!messages[0]?.key.fromMe) {
           const captureMessage = messages[0]?.message?.conversation;
           const numberWa = messages[0]?.key?.remoteJid;
-
-          const compareMessage = captureMessage.toLocaleLowerCase();
-
-          if (compareMessage.includes("ping")) {
-            await sock.sendMessage(
-              numberWa,
-              {
-                text: "Pong",
-              },
-              {
-                quoted: messages[0],
-              }
-            );
-          } else if (compareMessage.includes("quien eres")) {
-            await sock.sendMessage(
-              numberWa,
-              {
-                text: "Soy Arlo, un bot de whatsapp creado para ayudar a mi amo.",
-              },
-              {
-                quoted: messages[0],
-              }
-            );
-          } 
-          /*
-          else {
-            await sock.sendMessage(
-              numberWa,
-              {
-                text: "Soy un bot de whatsapp",
-              },
-              {
-                quoted: messages[0],
-              }
-            );
-          }*/
+  
+          // Verificación para ignorar mensajes de grupos (los grupos terminan con '@g.us')
+          if (!numberWa.endsWith("@g.us")) {
+            const compareMessage = captureMessage.toLocaleLowerCase();
+  
+            if (compareMessage.includes("ping")) {
+              await sock.sendMessage(
+                numberWa,
+                {
+                  text: "Pong",
+                },
+                {
+                  quoted: messages[0],
+                }
+              );
+            } else if (compareMessage.includes("quien eres")) {
+              await sock.sendMessage(
+                numberWa,
+                {
+                  text: "Soy Arlo, un bot de whatsapp creado para ayudar a mi amo.",
+                },
+                {
+                  quoted: messages[0],
+                }
+              );
+            }
+          }
         }
       }
     } catch (error) {
