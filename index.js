@@ -26,6 +26,7 @@ const fileUpload = require("express-fileupload");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const app = require("express")();
+const TOKEN = 'abc123..';
 
 // Habilitar la carga de archivos
 app.use(
@@ -39,7 +40,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 const server = require("http").createServer(app);
 const io = require("socket.io")(server);
-const port = process.env.PORT || 3033;
+const port = process.env.PORT || 8080;
 const qrcode = require("qrcode");
 
 app.use("/assets", express.static(__dirname + "/client/assets"));
@@ -112,6 +113,13 @@ async function connectToWhatsApp() {
 
   //==============================================================================
 
+ //Tabla simulada con las palabras clave y sus respuestas
+  const respuestasTabla = [
+    { keyword: "pam", respuesta: "Pum" },
+    { keyword: "cual eres", respuesta: "Soy Orlo, un bot de whatsapp creado para ayudar a mi amo." },
+    { keyword: "a", respuesta: "e" },
+  ];
+
   sock.ev.on("messages.upsert", async ({ messages, type }) => {
     try {
       if (type === "notify") {
@@ -119,31 +127,26 @@ async function connectToWhatsApp() {
           const captureMessage = messages[0]?.message?.conversation;
           const numberWa = messages[0]?.key?.remoteJid;
   
-          // Verificación para ignorar mensajes de grupos (los grupos terminan con '@g.us')
-          if (!numberWa.endsWith("@g.us")) {
-            const compareMessage = captureMessage.toLocaleLowerCase();
+          // Normalizamos el mensaje capturado (pasamos a minúsculas para comparación)
+          const compareMessage = captureMessage.toLowerCase();
+          console.log("--> Nro de Origen: " + numberWa);
   
-            if (compareMessage.includes("ping")) {
-              await sock.sendMessage(
-                numberWa,
-                {
-                  text: "Pong",
-                },
-                {
-                  quoted: messages[0],
-                }
-              );
-            } else if (compareMessage.includes("quien eres")) {
-              await sock.sendMessage(
-                numberWa,
-                {
-                  text: "Soy Arlo, un bot de whatsapp creado para ayudar a mi amo.",
-                },
-                {
-                  quoted: messages[0],
-                }
-              );
-            }
+          // Buscar en la tabla si el mensaje contiene alguna palabra clave
+          const respuestaEncontrada = respuestasTabla.find((item) =>
+            compareMessage.includes(item.keyword)
+          );
+  
+          // Si se encontró una palabra clave, enviar la respuesta correspondiente
+          if (respuestaEncontrada) {
+            await sock.sendMessage(
+              numberWa,
+              {
+                text: respuestaEncontrada.respuesta,
+              },
+              {
+                quoted: messages[0],
+              }
+            );
           }
         }
       }
@@ -164,6 +167,20 @@ const isConnected = () => {
 //==============================================================================
 
 app.post("/send-message", async (req, res) => {
+  
+  // Verificar el token en los encabezados
+  const token = req.headers['authorization'];
+
+  console.log("--> var: " + TOKEN);
+  console.log("--> input: " + token);
+
+  if (!token || token !== `Bearer ${TOKEN}`) {
+    return res.status(401).json({
+      status: false,
+      response: "No autorizado",
+    });
+  }
+  
   const tempMessage = req.body.message;
   const number = req.body.number;
   const imageUrl = req.body.imageUrl; // Nuevo parámetro para la URL de la imagen
@@ -244,7 +261,6 @@ app.post("/send-message", async (req, res) => {
     return res.status(500).send(err);
   }
 });
-
 
 //==============================================================================
 
