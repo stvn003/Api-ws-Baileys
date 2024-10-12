@@ -115,9 +115,8 @@ async function connectToWhatsApp() {
 
  //Tabla simulada con las palabras clave y sus respuestas
   const respuestasTabla = [
-    { keyword: "pam", respuesta: "Pum" },
-    { keyword: "cual eres", respuesta: "Soy Orlo, un bot de whatsapp creado para ayudar a mi amo." },
-    { keyword: "a", respuesta: "e" },
+    { keyword: "y tu, quien eres", respuesta: "Soy un bot de whatsapp creado para ayudar a mi amo." },
+    { keyword: "funcionas", respuesta: "Claro que si, y muy bien!" },
   ];
 
   sock.ev.on("messages.upsert", async ({ messages, type }) => {
